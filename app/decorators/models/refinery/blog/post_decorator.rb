@@ -1,9 +1,22 @@
+# app/decorators/models/refinery/blog/post_decorator.rb
 require 'acts_as_indexed'
 
-module RefineryBlogPostAddActsAsIndexed
-  def self.prepended(base)
-    base.acts_as_indexed fields: [:title, :custom_teaser, :body] unless self.respond_to? :with_query
+module Models
+  module Refinery
+    module Blog
+      module PostDecorator
+        def self.prepended(base)
+          return if base.respond_to?(:with_query)
+          
+          base.acts_as_indexed fields: %i[title custom_teaser body]
+        end
+      end
+    end
   end
 end
 
-Refinery::Blog::Post.prepend(RefineryBlogPostAddActsAsIndexed) rescue NameError
+begin
+  Refinery::Blog::Post.prepend(Models::Refinery::Blog::PostDecorator)
+rescue NameError
+  # Manejar caso donde la clase no existe
+end

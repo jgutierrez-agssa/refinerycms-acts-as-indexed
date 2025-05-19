@@ -1,9 +1,20 @@
 require 'acts_as_indexed'
 
-module RefineryBlogCategoryAddActsAsIndexed
-  def self.prepended(base)
-    base.acts_as_indexed fields: [:title] unless self.respond_to? :with_query
+module Models
+  module Refinery
+    module Blog
+      module CategoryDecorator
+        def self.prepended(base)
+          return if base.respond_to?(:with_query)
+          
+          base.acts_as_indexed(fields: [:title])
+        end
+      end
+    end
   end
 end
 
-Refinery::Blog::Category.prepend(RefineryBlogCategoryAddActsAsIndexed) rescue NameError
+# Precargar la clase manualmente si es necesario
+if defined?(Refinery::Blog::Category)
+  Refinery::Blog::Category.prepend(Models::Refinery::Blog::CategoryDecorator)
+end

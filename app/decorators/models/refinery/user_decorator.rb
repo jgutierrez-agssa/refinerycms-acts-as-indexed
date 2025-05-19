@@ -1,9 +1,28 @@
+require_dependency 'refinery/authentication/devise/user'
 require 'acts_as_indexed'
 
-module RefineryAuthenticationDeviseUserAddActsAsIndexed
-  def self.prepended(base)
-    base.acts_as_indexed fields: [:username, :email] unless self.respond_to? :with_query
+module Models
+  module Refinery
+    module UserDecorator
+      def self.prepended(base)
+        # Añadir indexing solo si no existe
+        return if base.respond_to?(:with_query)
+        
+        base.acts_as_indexed fields: %i[username email]
+      end
+    end
   end
 end
 
-Refinery::Authentication::Devise::User.prepend(RefineryAuthenticationDeviseUserAddActsAsIndexed) rescue NameError
+# Aplicación con doble método de compatibilidad
+begin
+  Refinery::Authentication::Devise::User.prepend(
+    Models::Refinery::UserDecorator
+  )
+rescue NameError
+  if defined?(Refinery::Authentication::Devise::User)
+    Refinery::Authentication::Devise::User.class_eval do
+      acts_as_indexed fields: %i[username email] unless respond_to?(:with_query)
+    end
+  end
+end
